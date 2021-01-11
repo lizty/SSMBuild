@@ -1,0 +1,75 @@
+1. 问题：bean不存在？
+
+步骤：
+  1.查看这个bean是否注入成功
+      1. 连接不上数据库？
+        database.properties配置没有加jdbc.属性
+        driver=com.mysql.jdbc.Driver --> jdbc.driver=com.mysql.jdbc.Driver
+
+  2.junit单元测试，查看代码是否能查询出来结果
+      1. sql语法错误
+         where bookID=#{};没有加bookId
+         -->  where bookID=#{bookId}
+      2. 扫描不了"com.yao.dao.BookMapper",路径名写错了
+          <mappers><mapper resource="com.yao.dao.BookMapper"/></mappers>
+          改成-->
+          <mappers>
+              <mapper resource="com/yao/dao/BookMapper.xml"/>
+          </mappers>
+
+  3.问题不一定在底层，是spring出了问题
+
+  4.启动不了浏览器
+       1. 一个或多个筛选器启动失败。完整的详细信息将在相应的容器日志文件中找到
+          由于之前的错误，Context[]启动失败
+
+          原因：lib包创建的位置错误，lib与classes包同级
+
+  5.springmvc整合的时候没调到service层的bean
+      1. applicationContext.xml没有注入bean
+      2. web.xml中导入spring-mvc.xml配置，因为分层所以spring-mvc.xml中没有service的bean
+          <init-param>
+                      <param-name>contextConfigLocation</param-name>
+                      <param-value>classpath:spring-mvc.xml</param-value>
+           </init-param>
+           改成 -->
+           <init-param>
+                       <param-name>contextConfigLocation</param-name>
+                       <param-value>classpath:applicationContext.xml</param-value>
+           </init-param>
+
+2. 网页传入数据库的汉字为问号,idea控制台显示中文，传回数据库就变？？？：
+      1. 编码不一致，mysql建表的时候数据格式未设置，改为utf-8 --> 没有解决
+      2. cmd查询MySQL，编码格式太乱了
+         C:\Windows\system32>mysql -hlocalhost -uroot -p
+         mysql> show variables like "char%";
+         +--------------------------+-------------------------------------------------+
+         | Variable_name            | Value                                           |
+         +--------------------------+-------------------------------------------------+
+         | character_set_client     | gbk                                             |
+         | character_set_connection | gbk                                             |
+         | character_set_database   | latin1                                          |
+         | character_set_filesystem | binary                                          |
+         | character_set_results    | gbk                                             |
+         | character_set_server     | latin1                                          |
+         | character_set_system     | utf8                                            |
+         | character_sets_dir       | D:\soft-ware\MySQL\mysql-5.7.29\share\charsets\ |
+         +--------------------------+-------------------------------------------------+
+         my.ini文件 --> 从解压后的文件中找到my-medium.ini,
+         在[client]和[mysqld]字段下面均添加default-character-set=utf8
+         mysql(mysql5.5以上)，在高版本对字符编码方式修改的办法中，在[mysqld]下的修改发生了变化，正确方式如下：
+         [mysqld]下添加的应该为：
+         character-set-server=utf8
+         collation-server=utf8_general_ci
+         +--------------------------+-------------------------------------------------+
+         | Variable_name            | Value                                           |
+         +--------------------------+-------------------------------------------------+
+         | character_set_client     | utf8                                            |
+         | character_set_connection | utf8                                            |
+         | character_set_database   | utf8                                            |
+         | character_set_filesystem | binary                                          |
+         | character_set_results    | utf8                                            |
+         | character_set_server     | utf8                                            |
+         | character_set_system     | utf8                                            |
+         | character_sets_dir       | D:\soft-ware\MySQL\mysql-5.7.29\share\charsets\ |
+         +--------------------------+-------------------------------------------------+
